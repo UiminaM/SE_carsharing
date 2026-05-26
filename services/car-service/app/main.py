@@ -1,4 +1,3 @@
-"""Car service entry point — FastAPI application with lifecycle hooks."""
 
 from __future__ import annotations
 

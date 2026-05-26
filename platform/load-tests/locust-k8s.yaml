@@ -1,0 +1,72 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: locust-master
+  namespace: ci
+spec:
+  replicas: 1
+  selector: { matchLabels: { app: locust, role: master } }
+  template:
+    metadata:
+      labels: { app: locust, role: master }
+    spec:
+      containers:
+        - name: locust
+          image: locustio/locust:2.31.0
+          command: ["locust"]
+          args:
+            - "-f"
+            - "/data/locustfile.py"
+            - "--master"
+            - "-H"
+            - "http://haproxy.ingress.svc.cluster.local"
+          env:
+            - name: TARGET_HOST_HEADER
+              value: api.carsharing.local
+          ports:
+            - { name: ui,        containerPort: 8089 }
+            - { name: master-p,  containerPort: 5557 }
+          volumeMounts:
+            - { name: scen, mountPath: /data }
+      volumes:
+        - name: scen
+          configMap: { name: locust-scenario }
+---
+apiVersion: v1
+kind: Service
+metadata: { name: locust-master, namespace: ci }
+spec:
+  selector: { app: locust, role: master }
+  ports:
+    - { name: ui,       port: 8089, targetPort: ui }
+    - { name: master-p, port: 5557, targetPort: master-p }
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: locust-worker
+  namespace: ci
+spec:
+  replicas: 4
+  selector: { matchLabels: { app: locust, role: worker } }
+  template:
+    metadata:
+      labels: { app: locust, role: worker }
+    spec:
+      containers:
+        - name: locust
+          image: locustio/locust:2.31.0
+          command: ["locust"]
+          args:
+            - "-f"
+            - "/data/locustfile.py"
+            - "--worker"
+            - "--master-host=locust-master.ci.svc.cluster.local"
+          env:
+            - name: TARGET_HOST_HEADER
+              value: api.carsharing.local
+          volumeMounts:
+            - { name: scen, mountPath: /data }
+      volumes:
+        - name: scen
+          configMap: { name: locust-scenario }

@@ -1,0 +1,122 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboards-carsharing
+  namespace: observability
+  labels:
+    grafana_dashboard: "1"
+data:
+  carsharing-overview.json: |
+    {
+      "title": "Carsharing — Overview",
+      "uid": "carsharing-overview",
+      "schemaVersion": 39,
+      "time": { "from": "now-1h", "to": "now" },
+      "panels": [
+        {
+          "type": "timeseries", "title": "RPS по сервисам (Istio)",
+          "targets": [{
+            "expr": "sum by (destination_service) (rate(istio_requests_total{reporter=\"destination\",destination_service_namespace=\"carsharing\"}[1m]))"
+          }]
+        },
+        {
+          "type": "timeseries", "title": "p95 latency по сервисам (мс)",
+          "targets": [{
+            "expr": "histogram_quantile(0.95, sum by (destination_service, le) (rate(istio_request_duration_milliseconds_bucket{reporter=\"destination\",destination_service_namespace=\"carsharing\"}[1m])))"
+          }]
+        },
+        {
+          "type": "timeseries", "title": "% 5xx",
+          "targets": [{
+            "expr": "100 * sum by (destination_service) (rate(istio_requests_total{response_code=~\"5..\",destination_service_namespace=\"carsharing\"}[1m])) / sum by (destination_service) (rate(istio_requests_total{destination_service_namespace=\"carsharing\"}[1m]))"
+          }]
+        },
+        {
+          "type": "stat", "title": "Circuit Breaker — ejected hosts",
+          "targets": [{
+            "expr": "sum by (cluster_name) (envoy_cluster_outlier_detection_ejections_active)"
+          }]
+        },
+        {
+          "type": "timeseries", "title": "Circuit Breaker — ejections / pending overflow",
+          "targets": [
+            {
+              "expr": "sum by (cluster_name) (rate(envoy_cluster_outlier_detection_ejections_total[1m]))",
+              "legendFormat": "ejections {{cluster_name}}"
+            },
+            {
+              "expr": "sum by (cluster_name) (rate(envoy_cluster_upstream_rq_pending_overflow[1m]))",
+              "legendFormat": "pending overflow {{cluster_name}}"
+            }
+          ]
+        }
+      ]
+    }
+  carsharing-kafka.json: |
+    {
+      "title": "Carsharing — Kafka",
+      "uid": "carsharing-kafka",
+      "schemaVersion": 39,
+      "time": { "from": "now-1h", "to": "now" },
+      "panels": [
+        {
+          "type": "timeseries", "title": "Producer rate (msg/s) по топикам",
+          "targets": [{
+            "expr": "sum by (topic) (rate(kafka_topic_partition_current_offset[1m]))"
+          }]
+        },
+        {
+          "type": "timeseries", "title": "Consumer lag",
+          "targets": [{
+            "expr": "sum by (consumergroup, topic) (kafka_consumergroup_lag)"
+          }]
+        },
+        {
+          "type": "timeseries", "title": "Глубина очередей (size в байтах)",
+          "targets": [{
+            "expr": "sum by (topic) (kafka_log_log_size)"
+          }]
+        },
+        {
+          "type": "timeseries", "title": "End-to-end producer latency",
+          "targets": [{
+            "expr": "histogram_quantile(0.95, sum by (topic, le) (rate(kafka_producer_request_latency_ms_bucket[1m])))"
+          }]
+        }
+      ]
+    }
+  carsharing-ratelimit.json: |
+    {
+      "title": "Carsharing — Rate Limit / Edge",
+      "uid": "carsharing-ratelimit",
+      "schemaVersion": 39,
+      "time": { "from": "now-1h", "to": "now" },
+      "panels": [
+        {
+          "type": "timeseries", "title": "Запросы, ограниченные RLS",
+          "targets": [{
+            "expr": "sum by (descriptor_value) (rate(ratelimit_service_rate_limit_over_limit[1m]))"
+          }]
+        },
+        {
+          "type": "timeseries", "title": "RLS — total / OK / OVER_LIMIT",
+          "targets": [
+            { "expr": "sum(rate(ratelimit_service_rate_limit_total_hits[1m]))",  "legendFormat": "total" },
+            { "expr": "sum(rate(ratelimit_service_rate_limit_within_limit[1m]))","legendFormat": "ok" },
+            { "expr": "sum(rate(ratelimit_service_rate_limit_over_limit[1m]))",  "legendFormat": "blocked" }
+          ]
+        },
+        {
+          "type": "timeseries", "title": "HAProxy — текущее число сессий",
+          "targets": [{
+            "expr": "sum(haproxy_frontend_current_sessions)"
+          }]
+        },
+        {
+          "type": "timeseries", "title": "API Gateway / Istio — HTTP 429",
+          "targets": [{
+            "expr": "sum by (destination_service) (rate(istio_requests_total{response_code=\"429\"}[1m]))"
+          }]
+        }
+      ]
+    }

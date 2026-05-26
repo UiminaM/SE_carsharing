@@ -1,0 +1,32 @@
+microservice:
+  name: car-service
+  fullName: car-service
+  containerPort: 8001
+  image:
+    repository: registry.ci.svc.cluster.local:5000/car-service
+    tag: latest
+  databases:
+    postgres:
+      enabled: true
+      database: cars_db
+      dsnEnvName: CAR_POSTGRES_DSN
+    mongo:
+      enabled: true
+      uriEnvName: CAR_MONGO_URI
+      uri: mongodb://mongodb.data.svc.cluster.local:27017
+      databaseEnvName: CAR_MONGO_DB
+      database: cars_geo
+    redis:
+      enabled: true
+      urlEnvName: CAR_REDIS_URL
+      url: redis://valkey-primary.data.svc.cluster.local:6379/0
+  kafka:
+    enabled: true
+    bootstrapEnvName: CAR_KAFKA_BOOTSTRAP_SERVERS
+    bootstrap: "carsharing-kafka-bootstrap.data.svc.cluster.local:9092"
+    topics: ["car.events", "car.commands"]
+  service:
+    type: ClusterIP
+    port: 8001
+  serviceAccount:
+    name: car-service

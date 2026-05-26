@@ -1,4 +1,3 @@
-"""User repository — PostgreSQL operations."""
 
 from __future__ import annotations
 

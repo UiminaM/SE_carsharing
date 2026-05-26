@@ -1,0 +1,74 @@
+name: ""
+fullName: ""
+replicaCount: 2
+
+image:
+  repository: registry.ci.svc.cluster.local:5000/api-gateway
+  tag: latest
+  pullPolicy: IfNotPresent
+
+imagePullSecrets:
+  - name: registry-pull
+
+containerPort: 8000
+
+env: {}
+envFrom:
+  - configMapRef: { name: app-endpoints }
+
+databases:
+  postgres:
+    enabled: false
+    dsnEnvName: POSTGRES_DSN
+    dsnTemplate: "postgresql+asyncpg://carsharing:carsharing@postgres.data.svc.cluster.local:5432/{{ .Values.databases.postgres.database }}"
+    database: ""
+  mongo:
+    enabled: false
+    uriEnvName: MONGO_URI
+    uri: "mongodb://mongodb.data.svc.cluster.local:27017"
+    databaseEnvName: MONGO_DB
+    database: ""
+  cassandra:
+    enabled: false
+    hostsEnvName: CASSANDRA_HOSTS
+    hosts: "cassandra.data.svc.cluster.local"
+    portEnvName: CASSANDRA_PORT
+    port: "9042"
+    keyspaceEnvName: CASSANDRA_KEYSPACE
+    keyspace: ""
+  redis:
+    enabled: false
+    urlEnvName: REDIS_URL
+    url: "redis://valkey-primary.data.svc.cluster.local:6379/0"
+
+kafka:
+  enabled: true
+  bootstrapEnvName: KAFKA_BOOTSTRAP_SERVERS
+  bootstrap: "carsharing-kafka-bootstrap.data.svc.cluster.local:9092"
+  topics: []
+
+resources:
+  requests: { cpu: 100m, memory: 128Mi }
+  limits:   { cpu: 500m, memory: 384Mi }
+
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 6
+  targetCPUUtilizationPercentage: 70
+
+service:
+  type: ClusterIP
+  port: 8000
+
+serviceAccount:
+  create: true
+  name: ""
+
+podMonitor:
+  enabled: true
+  port: http
+  path: /metrics
+
+istio:
+  injection: true

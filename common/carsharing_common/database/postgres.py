@@ -1,4 +1,3 @@
-"""Async SQLAlchemy 2.x engine and session factory."""
 
 from __future__ import annotations
 

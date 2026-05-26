@@ -1,10 +1,3 @@
-"""Kafka consumer for car command topics.
-
-Handles commands from other services:
-- CMD_RESERVE_CAR  -> set status to reserved
-- CMD_RELEASE_CAR  -> set status to available
-- CMD_UPDATE_CAR_STATUS -> generic status change
-"""
 
 from __future__ import annotations
 

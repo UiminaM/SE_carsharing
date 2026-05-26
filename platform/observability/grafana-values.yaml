@@ -1,0 +1,78 @@
+adminUser: admin
+adminPassword: admin
+
+persistence:
+  enabled: true
+  size: 2Gi
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 256Mi
+  limits:
+    cpu: 1
+    memory: 768Mi
+
+livenessProbe:
+  initialDelaySeconds: 180
+  timeoutSeconds: 10
+  failureThreshold: 10
+
+readinessProbe:
+  initialDelaySeconds: 60
+  timeoutSeconds: 10
+  failureThreshold: 12
+
+service:
+  type: NodePort
+  nodePort: 30030
+
+datasources:
+  datasources.yaml:
+    apiVersion: 1
+    datasources:
+      - name: VictoriaMetrics
+        uid: VictoriaMetrics
+        type: prometheus
+        url: http://vmselect-vmcluster.observability.svc.cluster.local:8481/select/0/prometheus/
+        access: proxy
+        isDefault: true
+      - name: VictoriaLogs
+        uid: VictoriaLogs
+        type: victoriametrics-logs-datasource
+        url: http://vlogs.observability.svc.cluster.local:9428
+        access: proxy
+      - name: Tempo
+        uid: Tempo
+        type: tempo
+        url: http://tempo.observability.svc.cluster.local:3100
+        access: proxy
+        jsonData:
+          tracesToMetrics:
+            datasourceUid: VictoriaMetrics
+          tracesToLogs:
+            datasourceUid: VictoriaLogs
+            tags: ['service.name', 'pod']
+
+dashboardProviders:
+  dashboardproviders.yaml:
+    apiVersion: 1
+    providers:
+      - name: 'carsharing'
+        orgId: 1
+        folder: 'Carsharing'
+        type: file
+        disableDeletion: true
+        editable: true
+        options:
+          path: /var/lib/grafana/dashboards/carsharing
+
+dashboardsConfigMaps:
+  carsharing: grafana-dashboards-carsharing
+
+plugins:
+  - victoriametrics-logs-datasource
+
+env:
+  GF_AUTH_ANONYMOUS_ENABLED: "true"
+  GF_AUTH_ANONYMOUS_ORG_ROLE: "Viewer"

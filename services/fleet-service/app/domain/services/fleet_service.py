@@ -1,4 +1,3 @@
-"""Fleet domain service — ingests location updates, writes to Cassandra, publishes to Kafka."""
 
 from __future__ import annotations
 

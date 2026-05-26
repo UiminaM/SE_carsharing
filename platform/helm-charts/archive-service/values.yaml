@@ -1,0 +1,22 @@
+microservice:
+  name: archive-service
+  fullName: archive-service
+  containerPort: 8005
+  image:
+    repository: registry.ci.svc.cluster.local:5000/archive-service
+    tag: latest
+  kafka:
+    enabled: true
+    bootstrapEnvName: ARCHIVE_KAFKA_BOOTSTRAP_SERVERS
+    bootstrap: "carsharing-kafka-bootstrap.data.svc.cluster.local:9092"
+    topics: ["car.events", "trip.events", "user.events", "fleet.location.stream"]
+  env:
+    ARCHIVE_S3_ENDPOINT_URL: http://minio.data.svc.cluster.local:9000
+    ARCHIVE_S3_BUCKET: carsharing-archive
+    ARCHIVE_FLUSH_MAX_RECORDS: "500"
+    ARCHIVE_FLUSH_INTERVAL_SECONDS: "30"
+  service:
+    type: ClusterIP
+    port: 8005
+  serviceAccount:
+    name: archive-service

@@ -1,0 +1,33 @@
+---
+- name: kafka-strimzi
+  hosts: k8s
+  gather_facts: false
+  vars:
+    kubeconfig: "{{ lookup('env', 'KUBECONFIG') | default('~/.kube/config', true) }}"
+    kube_context: "{{ lookup('env', 'KUBE_CONTEXT') | default('carsharing', true) }}"
+  collections:
+    - kubernetes.core
+  roles:
+    - role: kafka
+      vars:
+        kafka_namespace: data
+        kafka_cluster_name: carsharing
+        kafka_replicas: 3
+        kafka_storage_size: 5Gi
+        kafka_topics:
+          - { name: car.events, partitions: 6, replication: 3 }
+          - { name: car.commands, partitions: 6, replication: 3 }
+          - { name: car.location, partitions: 6, replication: 3 }
+          - { name: user.events, partitions: 3, replication: 3 }
+          - { name: user.commands, partitions: 3, replication: 3 }
+          - { name: trip.events, partitions: 6, replication: 3 }
+          - { name: trip.commands, partitions: 6, replication: 3 }
+          - { name: fleet.location.stream, partitions: 6, replication: 3 }
+          - { name: archive.events, partitions: 3, replication: 3 }
+        kafka_users:
+          - { name: api-gateway, acls: [{ resource: "topic:car.events", op: Read }] }
+          - { name: car-service, acls: [{ resource: "topic:car.events", op: Write }] }
+          - { name: user-service, acls: [{ resource: "topic:user.events", op: Write }] }
+          - { name: trip-service, acls: [{ resource: "topic:trip.events", op: Write }] }
+          - { name: fleet-service, acls: [{ resource: "topic:fleet.location.stream", op: Write }] }
+          - { name: archive-service, acls: [{ resource: "topic:*", op: Read }] }

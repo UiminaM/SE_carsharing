@@ -1,8 +1,3 @@
-"""Kafka event contracts shared across all services.
-
-Every Kafka message MUST use one of these envelope schemas.
-Commands represent intent (imperative), Events represent facts (past tense).
-"""
 
 from __future__ import annotations
 
@@ -37,7 +32,6 @@ class EventType(StrEnum):
     TRIP_ARCHIVED = "archive.trip_archived"
 
 class CloudEvent(BaseModel):
-    """CloudEvents-inspired envelope for all Kafka messages."""
 
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     source: str = Field(description="Originating service, e.g. 'trip-service'")
@@ -100,7 +94,6 @@ class UserBalanceChangedData(BaseModel):
     reason: str
 
 class ArchivedData(BaseModel):
-    """Watermark: batch of messages from a Kafka partition was uploaded to S3."""
 
     source_topic: str
     partition: int
@@ -112,7 +105,6 @@ class ArchivedData(BaseModel):
     watermark_ts: datetime
 
 class TripArchivedData(BaseModel):
-    """Per-trip watermark — consumed by Trip Service to update archived_trips_index."""
 
     trip_id: str
     s3_bucket: str

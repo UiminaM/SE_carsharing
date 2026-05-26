@@ -1,4 +1,3 @@
-"""Archive service entry point: FastAPI (healthz/readyz) + Kafka→S3 consumer."""
 
 from __future__ import annotations
 

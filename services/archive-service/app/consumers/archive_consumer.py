@@ -1,20 +1,3 @@
-"""Kafka → Parquet → S3 sink.
-
-Consumes source topics (fleet.location.stream, trip.events, car.events,
-user.events), groups records into per-(topic, partition, hour) buffers,
-flushes them to MinIO as Parquet blobs and publishes an ``archive.events``
-watermark so other services (e.g. Trip Service) can safely delete data
-from hot storage.
-
-Flush is triggered by whichever of these fires first:
-  * buffer size >= ``flush_max_records``
-  * buffer age  >= ``flush_interval_seconds``
-
-Kafka offsets are committed only *after* a successful S3 upload —
-that gives at-least-once semantics, and filenames are deterministic
-(``...{start_offset}-{end_offset}.parquet``) so a retry re-uploads the
-same blob idempotently.
-"""
 
 from __future__ import annotations
 
@@ -67,7 +50,6 @@ class _Buffer:
         return time.monotonic() - self.created_at
 
 class ArchiveConsumer:
-    """Buffered Kafka → S3 archival sink."""
 
     def __init__(
         self,
@@ -164,7 +146,6 @@ class ArchiveConsumer:
         buf.add(msg.offset, record)
 
     def _flatten(self, event: CloudEvent) -> dict[str, Any]:
-        """Turn a CloudEvent into a flat dict suitable for Parquet columnar storage."""
         return {
             "event_id": event.id,
             "event_type": str(event.type),

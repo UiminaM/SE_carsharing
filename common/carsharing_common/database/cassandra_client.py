@@ -1,4 +1,3 @@
-"""Cassandra async session wrapper using cassandra-driver."""
 
 from __future__ import annotations
 
@@ -17,7 +16,6 @@ logger = structlog.get_logger()
 _executor = ThreadPoolExecutor(max_workers=8)
 
 class CassandraClient:
-    """Thin async wrapper over cassandra-driver's synchronous Session."""
 
     def __init__(self, contact_points: list[str], keyspace: str, port: int = 9042) -> None:
         self._contact_points = contact_points

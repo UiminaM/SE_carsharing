@@ -1,0 +1,40 @@
+apiVersion: operator.victoriametrics.com/v1beta1
+kind: VMAlert
+metadata:
+  name: vmalert
+  namespace: observability
+spec:
+  replicaCount: 1
+  datasource:
+    url: "http://vmselect-vmcluster.observability.svc.cluster.local:8481/select/0/prometheus/"
+  notifiers:
+    - url: "http://vmalertmanager-alertmanager.observability.svc.cluster.local:9093"
+  evaluationInterval: "30s"
+  selectAllByDefault: true
+  resources:
+    requests: { cpu: 50m, memory: 128Mi }
+    limits:   { cpu: 200m, memory: 256Mi }
+---
+apiVersion: operator.victoriametrics.com/v1beta1
+kind: VMAlertmanager
+metadata:
+  name: alertmanager
+  namespace: observability
+spec:
+  replicaCount: 1
+  configRawYaml: |
+    route:
+      receiver: default
+      group_by: [alertname, namespace, service]
+      group_wait: 10s
+      group_interval: 30s
+      repeat_interval: 1h
+    receivers:
+      - name: default
+      - name: webhook
+        webhook_configs:
+          - url: http://localhost:5001/
+    inhibit_rules:
+      - source_matchers: [severity = "page"]
+        target_matchers: [severity = "warn"]
+        equal: [namespace, service]

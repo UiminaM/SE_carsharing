@@ -1,0 +1,76 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: keepalived-config
+  namespace: ingress
+data:
+  keepalived.conf: |
+    global_defs {
+      router_id carsharing-edge
+      script_user root
+      enable_script_security
+    }
+
+    vrrp_script chk_haproxy {
+      script "/bin/sh -c 'nc -z haproxy.ingress.svc.cluster.local 80'"
+      interval 2
+      weight   -20
+      fall     2
+      rise     2
+    }
+
+    vrrp_instance VI_1 {
+      state           BACKUP
+      interface       eth0
+      virtual_router_id 51
+      priority        100
+      advert_int      1
+      nopreempt
+      authentication {
+        auth_type PASS
+        auth_pass carshare
+      }
+      virtual_ipaddress {
+        192.168.49.250/24 dev eth0
+      }
+      track_script {
+        chk_haproxy
+      }
+    }
+---
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: keepalived
+  namespace: ingress
+spec:
+  selector:
+    matchLabels: { app: keepalived }
+  template:
+    metadata:
+      labels: { app: keepalived }
+    spec:
+      hostNetwork: true
+      dnsPolicy: ClusterFirstWithHostNet
+      tolerations:
+        - operator: Exists
+      containers:
+        - name: keepalived
+          image: osixia/keepalived:2.0.20
+          securityContext:
+            capabilities:
+              add: ["NET_ADMIN", "NET_BROADCAST", "NET_RAW"]
+          env:
+            - { name: KEEPALIVED_INTERFACE, value: eth0 }
+            - { name: KEEPALIVED_VIRTUAL_IPS, value: "192.168.49.250" }
+            - { name: KEEPALIVED_UNICAST_PEERS, value: "" }
+            - { name: KEEPALIVED_ROUTER_ID, value: "51" }
+            - { name: KEEPALIVED_PASSWORD, value: "carshare" }
+          volumeMounts:
+            - { name: cfg, mountPath: /usr/local/etc/keepalived }
+          resources:
+            requests: { cpu: 50m,  memory: 64Mi }
+            limits:   { cpu: 200m, memory: 128Mi }
+      volumes:
+        - name: cfg
+          configMap: { name: keepalived-config }

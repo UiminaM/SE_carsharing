@@ -1,4 +1,3 @@
-"""Pydantic v2 schemas for User API."""
 
 from __future__ import annotations
 

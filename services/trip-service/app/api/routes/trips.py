@@ -1,4 +1,3 @@
-"""Trip REST API endpoints."""
 
 from __future__ import annotations
 
@@ -67,7 +66,6 @@ async def get_trip(
     trip_id: str,
     svc: TripDomainService = Depends(get_trip_service),
 ):
-    """Return the trip from hot storage, falling back to cold storage (S3)."""
     trip = await svc.get_trip_with_cold_fallback(trip_id)
     if not trip:
         raise HTTPException(status_code=404, detail="Trip not found")
@@ -88,12 +86,6 @@ async def trigger_retention(
     batch_size: int = Query(default=100, ge=1, le=10_000),
     svc: TripDomainService = Depends(get_trip_service),
 ):
-    """Manually trigger the retention worker.
-
-    Deletes completed/cancelled trips from PostgreSQL that have been archived
-    to S3 more than ``older_than_days`` days ago. Only rows present in
-    ``archived_trips_index`` are eligible — safety net against data loss.
-    """
     threshold = datetime.now(timezone.utc) - timedelta(days=older_than_days)
     deleted = await svc.retention_delete_archived(threshold, batch_size=batch_size)
     return {"deleted": deleted, "older_than": threshold.isoformat()}

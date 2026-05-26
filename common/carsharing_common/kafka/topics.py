@@ -1,8 +1,3 @@
-"""Central registry of all Kafka topics.
-
-Naming convention: <domain>.<entity>.<action>
-DLT (dead-letter) topics follow: <original-topic>.dlt
-"""
 
 class Topics:
     CAR_EVENTS = "car.events"

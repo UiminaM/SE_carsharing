@@ -1,0 +1,79 @@
+apiVersion: kafka.strimzi.io/v1beta2
+kind: Kafka
+metadata:
+  name: {{ kafka_cluster_name }}
+  namespace: {{ kafka_namespace }}
+  labels:
+    app.kubernetes.io/managed-by: ansible
+    platform.carsharing/component: kafka
+spec:
+  kafka:
+    version: "{{ kafka_version }}"
+    replicas: {{ kafka_replicas }}
+    listeners:
+      - name: plain
+        port: {{ kafka_listeners_plain_port }}
+        type: internal
+        tls: false
+      - name: tls
+        port: {{ kafka_listeners_tls_port }}
+        type: internal
+        tls: true
+        authentication:
+          type: tls
+    config:
+      auto.create.topics.enable: "false"
+      offsets.topic.replication.factor: {{ [kafka_replicas, 3] | min }}
+      transaction.state.log.replication.factor: {{ [kafka_replicas, 3] | min }}
+      transaction.state.log.min.isr: {{ 2 if kafka_replicas | int > 1 else 1 }}
+      min.insync.replicas: {{ 2 if kafka_replicas | int > 1 else 1 }}
+      default.replication.factor: {{ [kafka_replicas, 3] | min }}
+      log.retention.hours: 168
+      compression.type: lz4
+    storage:
+      type: jbod
+      volumes:
+        - id: 0
+          type: persistent-claim
+          size: {{ kafka_storage_size }}
+          deleteClaim: false
+          class: {{ kafka_storage_class }}
+    metricsConfig:
+      type: jmxPrometheusExporter
+      valueFrom:
+        configMapKeyRef:
+          name: kafka-metrics-config
+          key: kafka-metrics-config.yml
+    resources:
+      requests: { cpu: 200m, memory: 512Mi }
+      limits:   { cpu: 1,    memory: 2Gi }
+  zookeeper:
+    replicas: {{ kafka_zookeeper_replicas }}
+    storage:
+      type: persistent-claim
+      size: 1Gi
+      deleteClaim: false
+      class: {{ kafka_storage_class }}
+    resources:
+      requests: { cpu: 100m, memory: 256Mi }
+      limits:   { cpu: 500m, memory: 768Mi }
+  entityOperator:
+    topicOperator: {}
+    userOperator: {}
+  kafkaExporter:
+    topicRegex: ".*"
+    groupRegex: ".*"
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: kafka-metrics-config
+  namespace: {{ kafka_namespace }}
+data:
+  kafka-metrics-config.yml: |
+    lowercaseOutputName: true
+    rules:
+      - pattern: kafka.server<type=(.+), name=(.+)PerSec\w*><>Count
+        name: kafka_server_$1_$2_total
+      - pattern: kafka.server<type=(.+), name=(.+)><>Value
+        name: kafka_server_$1_$2

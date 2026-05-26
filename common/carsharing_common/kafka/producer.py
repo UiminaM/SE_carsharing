@@ -1,4 +1,3 @@
-"""Async Kafka producer with outbox-style reliability guarantees."""
 
 from __future__ import annotations
 
@@ -14,7 +13,6 @@ from carsharing_common.schemas.events import CloudEvent
 logger: structlog.stdlib.BoundLogger = structlog.get_logger()
 
 class KafkaProducerService:
-    """Wraps AIOKafkaProducer with structured logging and serialization."""
 
     def __init__(self, bootstrap_servers: str, client_id: str = "carsharing") -> None:
         self._bootstrap_servers = bootstrap_servers

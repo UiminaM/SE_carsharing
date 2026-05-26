@@ -1,0 +1,53 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: ingress-haproxy
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/UiminaM/SE_carsharing.git
+    targetRevision: main
+    path: platform/ingress
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: ingress
+  syncPolicy:
+    automated: { prune: true, selfHeal: true }
+    syncOptions: [ServerSideApply=true]
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: ratelimit
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/UiminaM/SE_carsharing.git
+    targetRevision: main
+    path: platform/ratelimit
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: ratelimit
+  syncPolicy:
+    automated: { prune: true, selfHeal: true }
+    syncOptions: [ServerSideApply=true]
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: istio-traffic-policies
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/UiminaM/SE_carsharing.git
+    targetRevision: main
+    path: platform/istio
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: carsharing
+  syncPolicy:
+    automated: { prune: true, selfHeal: true }
+    syncOptions: [ServerSideApply=true]

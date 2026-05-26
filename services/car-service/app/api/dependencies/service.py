@@ -1,4 +1,3 @@
-"""FastAPI dependency injection for Car domain service."""
 
 from __future__ import annotations
 

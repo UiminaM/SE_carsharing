@@ -1,7 +1,3 @@
-"""Reverse-proxy router that forwards requests to downstream microservices.
-
-Aggregation endpoints combine data from multiple services when needed.
-"""
 
 from __future__ import annotations
 
@@ -128,7 +124,6 @@ async def get_latest_position(car_id: str):
 
 @router.get("/v1/aggregate/trip/{trip_id}")
 async def aggregate_trip_info(trip_id: str):
-    """Combines trip, car, and user data in a single response."""
     client = await get_http_client()
 
     trip = await _proxy("GET", f"{settings.trip_service_url}/api/v1/trips/{trip_id}")

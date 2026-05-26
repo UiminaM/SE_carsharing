@@ -1,0 +1,28 @@
+microservice:
+  name: api-gateway
+  fullName: api-gateway
+  containerPort: 8000
+  image:
+    repository: registry.ci.svc.cluster.local:5000/api-gateway
+    tag: latest
+  databases:
+    redis:
+      enabled: true
+      urlEnvName: GW_REDIS_URL
+      url: redis://valkey-primary.data.svc.cluster.local:6379/0
+  env:
+    GW_CAR_SERVICE_URL: http://car-service.carsharing.svc.cluster.local:8001
+    GW_USER_SERVICE_URL: http://user-service.carsharing.svc.cluster.local:8002
+    GW_TRIP_SERVICE_URL: http://trip-service.carsharing.svc.cluster.local:8003
+    GW_FLEET_SERVICE_URL: http://fleet-service.carsharing.svc.cluster.local:8004
+  service:
+    type: ClusterIP
+    port: 8000
+  serviceAccount:
+    create: true
+    name: api-gateway
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 8
+    targetCPUUtilizationPercentage: 60

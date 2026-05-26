@@ -1,4 +1,3 @@
-"""Archive index repository — track which trips are already in cold storage."""
 
 from __future__ import annotations
 

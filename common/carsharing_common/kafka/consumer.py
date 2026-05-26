@@ -1,4 +1,3 @@
-"""Async Kafka consumer with idempotency, retry, and dead-letter support."""
 
 from __future__ import annotations
 
@@ -17,7 +16,6 @@ logger: structlog.stdlib.BoundLogger = structlog.get_logger()
 EventHandler = Callable[[CloudEvent], Coroutine[Any, Any, None]]
 
 class IdempotencyStore:
-    """In-memory idempotency store. Replace with Redis in production."""
 
     def __init__(self, max_size: int = 100_000) -> None:
         self._seen: set[str] = set()
@@ -32,7 +30,6 @@ class IdempotencyStore:
         self._seen.add(key)
 
 class KafkaConsumerService:
-    """Consumer loop with per-type dispatch, retry, and DLT routing."""
 
     def __init__(
         self,

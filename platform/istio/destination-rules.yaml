@@ -1,0 +1,96 @@
+---
+apiVersion: networking.istio.io/v1beta1
+kind: DestinationRule
+metadata:
+  name: car-service
+  namespace: carsharing
+spec:
+  host: car-service.carsharing.svc.cluster.local
+  trafficPolicy:
+    connectionPool:
+      tcp:
+        maxConnections: 100
+        connectTimeout: 1s
+      http:
+        http1MaxPendingRequests: 50
+        http2MaxRequests: 200
+        maxRequestsPerConnection: 10
+        maxRetries: 3
+    outlierDetection:
+      consecutive5xxErrors: 5
+      interval: 30s
+      baseEjectionTime: 30s
+      maxEjectionPercent: 50
+      minHealthPercent: 30
+---
+apiVersion: networking.istio.io/v1beta1
+kind: DestinationRule
+metadata:
+  name: user-service
+  namespace: carsharing
+spec:
+  host: user-service.carsharing.svc.cluster.local
+  trafficPolicy:
+    connectionPool:
+      tcp:    { maxConnections: 100, connectTimeout: 1s }
+      http:   { http1MaxPendingRequests: 50, http2MaxRequests: 200, maxRequestsPerConnection: 10, maxRetries: 3 }
+    outlierDetection:
+      consecutive5xxErrors: 5
+      interval: 30s
+      baseEjectionTime: 30s
+      maxEjectionPercent: 50
+      minHealthPercent: 30
+---
+apiVersion: networking.istio.io/v1beta1
+kind: DestinationRule
+metadata:
+  name: trip-service
+  namespace: carsharing
+spec:
+  host: trip-service.carsharing.svc.cluster.local
+  trafficPolicy:
+    connectionPool:
+      tcp:    { maxConnections: 100, connectTimeout: 1s }
+      http:   { http1MaxPendingRequests: 50, http2MaxRequests: 200, maxRequestsPerConnection: 10, maxRetries: 3 }
+    outlierDetection:
+      consecutive5xxErrors: 5
+      interval: 30s
+      baseEjectionTime: 30s
+      maxEjectionPercent: 50
+      minHealthPercent: 30
+---
+apiVersion: networking.istio.io/v1beta1
+kind: DestinationRule
+metadata:
+  name: fleet-service
+  namespace: carsharing
+spec:
+  host: fleet-service.carsharing.svc.cluster.local
+  trafficPolicy:
+    connectionPool:
+      tcp:    { maxConnections: 100, connectTimeout: 1s }
+      http:   { http1MaxPendingRequests: 50, http2MaxRequests: 200, maxRequestsPerConnection: 10, maxRetries: 3 }
+    outlierDetection:
+      consecutive5xxErrors: 5
+      interval: 30s
+      baseEjectionTime: 30s
+      maxEjectionPercent: 50
+      minHealthPercent: 30
+---
+apiVersion: networking.istio.io/v1beta1
+kind: DestinationRule
+metadata:
+  name: archive-service
+  namespace: carsharing
+spec:
+  host: archive-service.carsharing.svc.cluster.local
+  trafficPolicy:
+    connectionPool:
+      tcp:    { maxConnections: 50, connectTimeout: 1s }
+      http:   { http1MaxPendingRequests: 25, http2MaxRequests: 100, maxRequestsPerConnection: 10, maxRetries: 2 }
+    outlierDetection:
+      consecutive5xxErrors: 3
+      interval: 20s
+      baseEjectionTime: 60s
+      maxEjectionPercent: 50
+      minHealthPercent: 30

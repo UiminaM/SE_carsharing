@@ -1,4 +1,3 @@
-"""Healthcheck endpoints reusable across all services."""
 
 from __future__ import annotations
 

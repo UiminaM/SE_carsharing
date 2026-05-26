@@ -1,4 +1,3 @@
-"""Tracking repository — Cassandra time-series writes/reads."""
 
 from __future__ import annotations
 

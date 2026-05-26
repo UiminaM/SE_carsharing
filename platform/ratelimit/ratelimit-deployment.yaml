@@ -1,0 +1,54 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ratelimit
+  namespace: ratelimit
+  labels: { app: ratelimit }
+spec:
+  replicas: 2
+  selector:
+    matchLabels: { app: ratelimit }
+  template:
+    metadata:
+      labels: { app: ratelimit }
+    spec:
+      containers:
+        - name: ratelimit
+          image: envoyproxy/ratelimit:v1.4.0
+          command: ["/bin/ratelimit"]
+          env:
+            - { name: USE_STATSD,           value: "false" }
+            - { name: LOG_LEVEL,            value: "INFO" }
+            - { name: REDIS_SOCKET_TYPE,    value: "tcp" }
+            - { name: REDIS_URL,            value: "valkey-primary.data.svc.cluster.local:6379" }
+            - { name: RUNTIME_ROOT,         value: "/data" }
+            - { name: RUNTIME_SUBDIRECTORY, value: "ratelimit" }
+            - { name: RUNTIME_WATCH_ROOT,   value: "false" }
+            - { name: RUNTIME_IGNOREDOTFILES, value: "true" }
+          ports:
+            - { name: grpc,    containerPort: 8081 }
+            - { name: http,    containerPort: 8080 }
+            - { name: metrics, containerPort: 6070 }
+          volumeMounts:
+            - { name: cfg, mountPath: /data/ratelimit/config }
+          resources:
+            requests: { cpu: 50m, memory: 96Mi }
+            limits:   { cpu: 300m, memory: 256Mi }
+      volumes:
+        - name: cfg
+          configMap:
+            name: ratelimit-config
+            items:
+              - { key: config.yaml, path: config.yaml }
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ratelimit
+  namespace: ratelimit
+spec:
+  selector: { app: ratelimit }
+  ports:
+    - { name: grpc,    port: 8081, targetPort: 8081 }
+    - { name: http,    port: 8080, targetPort: 8080 }
+    - { name: metrics, port: 6070, targetPort: 6070 }

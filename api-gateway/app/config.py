@@ -1,4 +1,3 @@
-"""API Gateway configuration."""
 
 from __future__ import annotations
 

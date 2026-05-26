@@ -1,4 +1,3 @@
-"""Car domain models — SQLAlchemy ORM for PostgreSQL metadata."""
 
 from __future__ import annotations
 

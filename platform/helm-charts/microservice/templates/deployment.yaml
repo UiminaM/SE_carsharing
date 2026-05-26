@@ -1,0 +1,78 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "ms.fullName" . }}
+  labels: {{- include "ms.labels" . | nindent 4 }}
+spec:
+  {{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels: {{- include "ms.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels: {{- include "ms.labels" . | nindent 8 }}
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "{{ .Values.containerPort }}"
+        prometheus.io/path: "/metrics"
+        sidecar.istio.io/inject: "{{ .Values.istio.injection }}"
+    spec:
+      serviceAccountName: {{ include "ms.serviceAccountName" . }}
+      imagePullSecrets:
+        {{- toYaml .Values.imagePullSecrets | nindent 8 }}
+      containers:
+        - name: {{ include "ms.name" . }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - { name: http, containerPort: {{ .Values.containerPort }} }
+          env:
+            - { name: OTEL_EXPORTER_OTLP_ENDPOINT, value: "http://otel-collector.observability.svc.cluster.local:4317" }
+            - { name: OTEL_SERVICE_NAME,           value: "{{ include "ms.name" . }}" }
+            {{- if .Values.kafka.enabled }}
+            - { name: {{ .Values.kafka.bootstrapEnvName | quote }}, value: "{{ .Values.kafka.bootstrap }}" }
+            {{- end }}
+            {{- range $k, $v := .Values.env }}
+            - { name: {{ $k | quote }}, value: {{ $v | quote }} }
+            {{- end }}
+            {{- if .Values.databases.postgres.enabled }}
+            - name: {{ .Values.databases.postgres.dsnEnvName }}
+              value: {{ tpl .Values.databases.postgres.dsnTemplate . | quote }}
+            {{- end }}
+            {{- if .Values.databases.mongo.enabled }}
+            - name: {{ .Values.databases.mongo.uriEnvName }}
+              value: {{ .Values.databases.mongo.uri | quote }}
+            {{- if .Values.databases.mongo.database }}
+            - name: {{ .Values.databases.mongo.databaseEnvName }}
+              value: {{ .Values.databases.mongo.database | quote }}
+            {{- end }}
+            {{- end }}
+            {{- if .Values.databases.cassandra.enabled }}
+            - name: {{ .Values.databases.cassandra.hostsEnvName }}
+              value: {{ .Values.databases.cassandra.hosts | quote }}
+            - name: {{ .Values.databases.cassandra.portEnvName }}
+              value: {{ .Values.databases.cassandra.port | quote }}
+            {{- if .Values.databases.cassandra.keyspace }}
+            - name: {{ .Values.databases.cassandra.keyspaceEnvName }}
+              value: {{ .Values.databases.cassandra.keyspace | quote }}
+            {{- end }}
+            {{- end }}
+            {{- if .Values.databases.redis.enabled }}
+            - name: {{ .Values.databases.redis.urlEnvName }}
+              value: {{ .Values.databases.redis.url | quote }}
+            {{- end }}
+          envFrom: {{- toYaml .Values.envFrom | nindent 12 }}
+          readinessProbe:
+            httpGet:
+              path: /healthz/ready
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          livenessProbe:
+            httpGet:
+              path: /healthz/live
+              port: http
+            initialDelaySeconds: 15
+            periodSeconds: 15
+          resources: {{- toYaml .Values.resources | nindent 12 }}

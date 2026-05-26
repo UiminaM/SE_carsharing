@@ -1,0 +1,14 @@
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaTopic
+metadata:
+  name: {{ topic.name }}
+  namespace: {{ kafka_namespace }}
+  labels:
+    strimzi.io/cluster: {{ kafka_cluster_name }}
+spec:
+  partitions: {{ topic.partitions }}
+  replicas: {{ [topic.replication, kafka_replicas] | min }}
+  config:
+    retention.ms: {{ topic.retention_ms | default(86400000) }}
+    segment.bytes: 1073741824
+    compression.type: lz4

@@ -1,4 +1,3 @@
-"""Kafka consumer for fleet.location.stream — ingests IoT position data."""
 
 from __future__ import annotations
 

@@ -1,0 +1,46 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: haproxy-config
+  namespace: ingress
+data:
+  haproxy.cfg: |
+    global
+      log stdout format raw local0 info
+      maxconn 65535
+      stats socket /var/run/haproxy.sock mode 660 level admin
+      hard-stop-after 30s
+
+    defaults
+      log     global
+      mode    http
+      option  httplog
+      option  dontlognull
+      option  forwardfor
+      option  http-server-close
+      timeout connect 2s
+      timeout client  30s
+      timeout server  30s
+      timeout queue   10s
+
+    frontend stats
+      bind *:8404
+      stats enable
+      stats uri /
+      stats refresh 5s
+      no log
+
+    frontend http-in
+      bind *:80
+      default_backend istio-ingress
+      http-request set-header X-Real-IP %[src]
+      http-request set-header X-Forwarded-For %[src]
+      http-request set-header X-Forwarded-Proto http
+      http-request set-header X-Request-Id %[uuid()] unless { req.hdr(X-Request-Id) -m found }
+
+    backend istio-ingress
+      balance roundrobin
+      option httpchk GET /healthz/ready
+      http-check expect status 200
+      default-server inter 2s fall 2 rise 2 maxconn 1024
+      server gw1 istio-ingressgateway.ingress.svc.cluster.local:80 check port 15021

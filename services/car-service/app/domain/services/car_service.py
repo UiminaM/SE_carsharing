@@ -1,4 +1,3 @@
-"""Car domain service — business logic orchestration."""
 
 from __future__ import annotations
 

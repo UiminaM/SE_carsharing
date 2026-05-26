@@ -1,0 +1,45 @@
+
+kubeProxyReplacement: false
+
+ipam:
+  mode: "kubernetes"
+
+bpf:
+  masquerade: false
+
+hubble:
+  enabled: true
+  tls:
+    enabled: false
+  relay:
+    enabled: true
+  ui:
+    enabled: true
+
+envoy:
+  enabled: false
+
+prometheus:
+  enabled: false
+
+policyEnforcementMode: "default"
+
+resources:
+  requests:
+    cpu: 50m
+    memory: 128Mi
+  limits:
+    cpu: 500m
+    memory: 384Mi
+
+operator:
+  replicas: 1
+  prometheus:
+    enabled: false
+  resources:
+    requests:
+      cpu: 25m
+      memory: 64Mi
+    limits:
+      cpu: 200m
+      memory: 192Mi

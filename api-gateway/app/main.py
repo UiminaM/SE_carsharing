@@ -1,4 +1,3 @@
-"""API Gateway entry point — single entry point for all clients."""
 
 from __future__ import annotations
 
@@ -38,15 +37,6 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-@app.on_event("startup")
-async def _add_middleware():
-    """Deferred middleware addition to access redis after lifespan init.
-
-    Note: Starlette adds middleware in LIFO order, so rate limiter
-    is checked before auth.
-    """
-    pass
-
 app.add_middleware(AuthMiddleware)
 
 app.include_router(health_router)
@@ -57,7 +47,6 @@ app.include_router(proxy_router, prefix="/api")
 
 @app.middleware("http")
 async def rate_limit_inline(request, call_next):
-    """Inline rate-limiting until redis is initialized."""
     if redis_service is None:
         return await call_next(request)
 

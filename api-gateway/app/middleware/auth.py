@@ -1,8 +1,3 @@
-"""Stub authentication middleware.
-
-In production, replace with JWT validation (e.g., python-jose or authlib).
-Currently passes through all requests with a user_id header for development.
-"""
 
 from __future__ import annotations
 

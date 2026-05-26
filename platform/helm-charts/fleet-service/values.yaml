@@ -1,0 +1,30 @@
+microservice:
+  name: fleet-service
+  fullName: fleet-service
+  containerPort: 8004
+  image:
+    repository: registry.ci.svc.cluster.local:5000/fleet-service
+    tag: latest
+  databases:
+    cassandra:
+      enabled: true
+      hostsEnvName: FLEET_CASSANDRA_HOSTS
+      hosts: cassandra.data.svc.cluster.local
+      portEnvName: FLEET_CASSANDRA_PORT
+      port: "9042"
+      keyspaceEnvName: FLEET_CASSANDRA_KEYSPACE
+      keyspace: fleet_tracking
+    redis:
+      enabled: true
+      urlEnvName: FLEET_REDIS_URL
+      url: redis://valkey-primary.data.svc.cluster.local:6379/0
+  kafka:
+    enabled: true
+    bootstrapEnvName: FLEET_KAFKA_BOOTSTRAP_SERVERS
+    bootstrap: "carsharing-kafka-bootstrap.data.svc.cluster.local:9092"
+    topics: ["fleet-events"]
+  service:
+    type: ClusterIP
+    port: 8004
+  serviceAccount:
+    name: fleet-service

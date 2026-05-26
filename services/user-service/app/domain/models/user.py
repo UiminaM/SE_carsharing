@@ -1,4 +1,3 @@
-"""User domain models — SQLAlchemy ORM."""
 
 from __future__ import annotations
 

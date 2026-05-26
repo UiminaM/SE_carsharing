@@ -1,4 +1,3 @@
-"""Alembic migration environment for car-service (async)."""
 
 import asyncio
 import os

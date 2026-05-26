@@ -1,4 +1,3 @@
-"""Consume archive.events watermarks and maintain archived_trips_index."""
 
 from __future__ import annotations
 

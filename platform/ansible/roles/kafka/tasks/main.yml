@@ -1,0 +1,128 @@
+---
+- name: "Убеждаемся, что namespace {{ kafka_namespace }} существует"
+  kubernetes.core.k8s:
+    state: present
+    kubeconfig: "{{ kubeconfig }}"
+    context: "{{ kube_context }}"
+    definition:
+      apiVersion: v1
+      kind: Namespace
+      metadata:
+        name: "{{ kafka_namespace }}"
+
+- name: "Проверяем, установлен ли Strimzi operator"
+  kubernetes.core.k8s_info:
+    api_version: apps/v1
+    kind: Deployment
+    namespace: "{{ kafka_namespace }}"
+    label_selectors:
+      - strimzi.io/kind=cluster-operator
+    kubeconfig: "{{ kubeconfig }}"
+    context: "{{ kube_context }}"
+  register: strimzi_existing_deploy
+
+- name: "Устанавливаем Strimzi operator (метод: {{ strimzi_install_method }})"
+  when:
+    - strimzi_install_method == "helm"
+    - strimzi_existing_deploy.resources | length == 0
+  kubernetes.core.helm:
+    name: strimzi
+    chart_ref: strimzi-kafka-operator
+    chart_repo_url: "{{ strimzi_chart_repo_url }}"
+    chart_version: "{{ strimzi_operator_version }}"
+    release_namespace: "{{ kafka_namespace }}"
+    create_namespace: true
+    kubeconfig: "{{ kubeconfig }}"
+    context: "{{ kube_context }}"
+    values:
+      watchAnyNamespace: true
+      replicas: 1
+      resources:
+        requests: { cpu: 100m, memory: 256Mi }
+        limits:   { cpu: 1,    memory: 768Mi }
+
+- name: "Ждём регистрации Strimzi CRD Kafka"
+  kubernetes.core.k8s_info:
+    api_version: apiextensions.k8s.io/v1
+    kind: CustomResourceDefinition
+    name: kafkas.kafka.strimzi.io
+    kubeconfig: "{{ kubeconfig }}"
+    context: "{{ kube_context }}"
+  register: strimzi_kafka_crd
+  until: strimzi_kafka_crd.resources | length > 0
+  retries: 30
+  delay: 5
+
+- name: "Ждём готовности оператора"
+  kubernetes.core.k8s_info:
+    api_version: apps/v1
+    kind: Deployment
+    namespace: "{{ kafka_namespace }}"
+    label_selectors:
+      - strimzi.io/kind=cluster-operator
+    kubeconfig: "{{ kubeconfig }}"
+    context: "{{ kube_context }}"
+  register: strimzi_deploy
+  until: >
+    strimzi_deploy.resources | length > 0 and
+    (strimzi_deploy.resources[0].status.readyReplicas | default(0)) >= 1
+  retries: 30
+  delay: 5
+
+- name: "Применяем KafkaCluster (StatefulSet через CRD)"
+  kubernetes.core.k8s:
+    state: present
+    kubeconfig: "{{ kubeconfig }}"
+    context: "{{ kube_context }}"
+    definition: "{{ lookup('template', 'kafka-cluster.yaml.j2') | from_yaml_all | list }}"
+
+- name: "Создаём топики"
+  kubernetes.core.k8s:
+    state: present
+    kubeconfig: "{{ kubeconfig }}"
+    context: "{{ kube_context }}"
+    definition: "{{ lookup('template', 'kafka-topic.yaml.j2') | from_yaml }}"
+  loop: "{{ kafka_topics }}"
+  loop_control:
+    loop_var: topic
+
+- name: "Создаём пользователей и ACL"
+  kubernetes.core.k8s:
+    state: present
+    kubeconfig: "{{ kubeconfig }}"
+    context: "{{ kube_context }}"
+    definition: "{{ lookup('template', 'kafka-user.yaml.j2') | from_yaml }}"
+  loop: "{{ kafka_users }}"
+  loop_control:
+    loop_var: user
+
+- name: "Ждём, пока Kafka станет Ready"
+  kubernetes.core.k8s_info:
+    api_version: kafka.strimzi.io/v1beta2
+    kind: Kafka
+    namespace: "{{ kafka_namespace }}"
+    name: "{{ kafka_cluster_name }}"
+    kubeconfig: "{{ kubeconfig }}"
+    context: "{{ kube_context }}"
+  register: kafka_status
+  until: >
+    kafka_status.resources | length > 0 and
+    (kafka_status.resources[0].status.conditions | default([]) |
+     selectattr('type','equalto','Ready') |
+     selectattr('status','equalto','True') | list | length) > 0
+  retries: 60
+  delay: 10
+
+- name: "Показываем bootstrap service Kafka"
+  kubernetes.core.k8s_info:
+    api_version: v1
+    kind: Service
+    namespace: "{{ kafka_namespace }}"
+    name: "{{ kafka_cluster_name }}-kafka-bootstrap"
+    kubeconfig: "{{ kubeconfig }}"
+    context: "{{ kube_context }}"
+  register: kafka_bootstrap_service
+
+- name: "Kafka bootstrap endpoint"
+  ansible.builtin.debug:
+    msg: "{{ kafka_cluster_name }}-kafka-bootstrap.{{ kafka_namespace }}.svc.cluster.local:{{ kafka_listeners_plain_port }}"

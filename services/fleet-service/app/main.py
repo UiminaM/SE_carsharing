@@ -1,4 +1,3 @@
-"""Fleet/Tracking service entry point."""
 
 from __future__ import annotations
 

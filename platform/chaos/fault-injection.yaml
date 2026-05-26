@@ -1,0 +1,17 @@
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: car-service
+  namespace: carsharing
+spec:
+  hosts: [car-service.carsharing.svc.cluster.local]
+  http:
+    - fault:
+        abort:
+          percentage: { value: 75 }
+          httpStatus: 503
+      timeout: 1s
+      retries:
+        attempts: 0
+      route:
+        - destination: { host: car-service.carsharing.svc.cluster.local }

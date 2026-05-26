@@ -1,0 +1,27 @@
+autoDiscovery:
+  clusterName: carsharing
+
+cloudProvider: clusterapi
+
+extraArgs:
+  scale-down-enabled: "true"
+  scale-down-utilization-threshold: "0.5"
+  scale-down-unneeded-time: "5m"
+  expander: "least-waste"
+  v: "4"
+
+rbac:
+  create: true
+
+resources:
+  limits:
+    cpu: 100m
+    memory: 300Mi
+  requests:
+    cpu: 50m
+    memory: 150Mi
+
+nodeGroups:
+  - name: workers
+    minSize: 1
+    maxSize: 6

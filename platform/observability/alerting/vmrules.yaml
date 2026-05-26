@@ -1,0 +1,59 @@
+apiVersion: operator.victoriametrics.com/v1beta1
+kind: VMRule
+metadata:
+  name: carsharing-slo
+  namespace: observability
+spec:
+  groups:
+    - name: carsharing.slo
+      rules:
+        - alert: HighErrorRate
+          expr: |
+            ( sum by (destination_service) (rate(istio_requests_total{response_code=~"5..",destination_service_namespace="carsharing"}[5m]))
+              /
+              sum by (destination_service) (rate(istio_requests_total{destination_service_namespace="carsharing"}[5m]))
+            ) > 0.05
+          for: 5m
+          labels: { severity: page, team: platform }
+          annotations:
+            summary: "Высокий процент 5xx у {{ $labels.destination_service }}"
+            description: "Доля 5xx > 5% в течение 5 минут"
+
+        - alert: HighLatencyP95
+          expr: |
+            histogram_quantile(0.95,
+              sum by (destination_service, le)
+                (rate(istio_request_duration_milliseconds_bucket{destination_service_namespace="carsharing"}[5m]))
+            ) > 1000
+          for: 10m
+          labels: { severity: warn, team: platform }
+          annotations:
+            summary: "p95 latency {{ $labels.destination_service }} > 1s"
+
+        - alert: CircuitBreakerEjections
+          expr: sum(rate(envoy_cluster_outlier_detection_ejections_active[5m])) > 0
+          for: 2m
+          labels: { severity: warn }
+          annotations:
+            summary: "Istio Circuit Breaker исключает хосты из балансировки"
+
+        - alert: KafkaConsumerLagHigh
+          expr: max by (consumergroup, topic) (kafka_consumergroup_lag) > 10000
+          for: 5m
+          labels: { severity: warn }
+          annotations:
+            summary: "Consumer lag {{ $labels.consumergroup }} / {{ $labels.topic }} > 10k"
+
+        - alert: RateLimiterBlocking
+          expr: sum(rate(ratelimit_service_rate_limit_over_limit[5m])) > 50
+          for: 2m
+          labels: { severity: info }
+          annotations:
+            summary: "Rate Limiter блокирует > 50 RPS"
+
+        - alert: PodCrashLooping
+          expr: sum by (namespace, pod) (rate(kube_pod_container_status_restarts_total[10m])) > 0.1
+          for: 10m
+          labels: { severity: warn }
+          annotations:
+            summary: "Pod {{ $labels.namespace }}/{{ $labels.pod }} рестартится"

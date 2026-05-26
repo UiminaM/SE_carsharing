@@ -1,4 +1,3 @@
-"""Async Redis client with geo and rate-limiting helpers."""
 
 from __future__ import annotations
 
@@ -47,7 +46,6 @@ class RedisService:
         radius_km: float = 5.0,
         count: int = 20,
     ) -> list[dict]:
-        """Return car IDs within radius sorted by distance."""
         results = await self.client.geosearch(
             GEO_KEY,
             longitude=lon,
@@ -78,7 +76,6 @@ class RedisService:
         max_requests: int = 100,
         window_seconds: int = 60,
     ) -> tuple[bool, int]:
-        """Returns (allowed: bool, remaining: int)."""
         import time
 
         key = f"{RATE_LIMIT_PREFIX}{client_id}"

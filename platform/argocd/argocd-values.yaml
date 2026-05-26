@@ -1,0 +1,58 @@
+global:
+  domain: argocd.carsharing.local
+
+configs:
+  params:
+    server.insecure: true
+  cm:
+    timeout.reconciliation: 60s
+    application.resourceTrackingMethod: annotation+label
+    resource.exclusions: |
+      - apiGroups:
+          - cilium.io
+        kinds:
+          - CiliumIdentity
+        clusters:
+          - "*"
+
+server:
+  service:
+    type: ClusterIP
+  metrics:
+    enabled: true
+
+controller:
+  metrics:
+    enabled: true
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 1
+      memory: 512Mi
+
+repoServer:
+  metrics:
+    enabled: true
+  resources:
+    requests:
+      cpu: 50m
+      memory: 256Mi
+    limits:
+      cpu: 1
+      memory: 768Mi
+  env:
+    - name: ARGOCD_EXEC_TIMEOUT
+      value: "180s"
+  extraArgs:
+    - --parallelismlimit=2
+
+dex:
+  enabled: false
+
+notifications:
+  enabled: true
+
+applicationSet:
+  enabled: true

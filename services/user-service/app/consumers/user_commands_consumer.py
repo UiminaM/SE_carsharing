@@ -1,4 +1,3 @@
-"""Kafka consumer for user commands (e.g., CMD_CHARGE_USER from Trip Service)."""
 
 from __future__ import annotations
 

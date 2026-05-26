@@ -1,0 +1,22 @@
+microservice:
+  name: user-service
+  fullName: user-service
+  containerPort: 8002
+  image:
+    repository: registry.ci.svc.cluster.local:5000/user-service
+    tag: latest
+  databases:
+    postgres:
+      enabled: true
+      database: users_db
+      dsnEnvName: USER_POSTGRES_DSN
+  kafka:
+    enabled: true
+    bootstrapEnvName: USER_KAFKA_BOOTSTRAP_SERVERS
+    bootstrap: "carsharing-kafka-bootstrap.data.svc.cluster.local:9092"
+    topics: ["user-events"]
+  service:
+    type: ClusterIP
+    port: 8002
+  serviceAccount:
+    name: user-service

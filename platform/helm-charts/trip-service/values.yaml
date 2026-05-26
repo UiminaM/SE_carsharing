@@ -1,0 +1,26 @@
+microservice:
+  name: trip-service
+  fullName: trip-service
+  containerPort: 8003
+  image:
+    repository: registry.ci.svc.cluster.local:5000/trip-service
+    tag: latest
+  databases:
+    postgres:
+      enabled: true
+      database: trips_db
+      dsnEnvName: TRIP_POSTGRES_DSN
+  kafka:
+    enabled: true
+    bootstrapEnvName: TRIP_KAFKA_BOOTSTRAP_SERVERS
+    bootstrap: "carsharing-kafka-bootstrap.data.svc.cluster.local:9092"
+    topics: ["trip.events", "trip.commands", "car.commands", "archive.events"]
+  env:
+    TRIP_S3_ENDPOINT_URL: http://minio.data.svc.cluster.local:9000
+    TRIP_S3_ACCESS_KEY: carsharing
+    TRIP_S3_BUCKET: carsharing-archive
+  service:
+    type: ClusterIP
+    port: 8003
+  serviceAccount:
+    name: trip-service

@@ -1,4 +1,3 @@
-"""User domain service — business logic."""
 
 from __future__ import annotations
 
@@ -62,7 +61,6 @@ class UserDomainService:
     async def charge_user(
         self, user_id: str, amount: float, reason: str = "trip_payment"
     ) -> User | None:
-        """Deduct amount from user balance. Publishes balance_changed event."""
         user = await self._repo.get_by_id(user_id)
         if not user:
             return None

@@ -1,0 +1,71 @@
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaTopic
+metadata:
+  name: car.events
+  namespace: data
+  labels: { strimzi.io/cluster: carsharing }
+spec: { partitions: 6, replicas: 3, config: { retention.ms: 86400000, compression.type: lz4 } }
+---
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaTopic
+metadata:
+  name: car.commands
+  namespace: data
+  labels: { strimzi.io/cluster: carsharing }
+spec: { partitions: 6, replicas: 3, config: { retention.ms: 86400000, compression.type: lz4 } }
+---
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaTopic
+metadata:
+  name: car.location
+  namespace: data
+  labels: { strimzi.io/cluster: carsharing }
+spec: { partitions: 6, replicas: 3, config: { retention.ms: 86400000 } }
+---
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaTopic
+metadata:
+  name: user.events
+  namespace: data
+  labels: { strimzi.io/cluster: carsharing }
+spec: { partitions: 3, replicas: 3, config: { retention.ms: 86400000 } }
+---
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaTopic
+metadata:
+  name: user.commands
+  namespace: data
+  labels: { strimzi.io/cluster: carsharing }
+spec: { partitions: 3, replicas: 3, config: { retention.ms: 86400000 } }
+---
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaTopic
+metadata:
+  name: trip.events
+  namespace: data
+  labels: { strimzi.io/cluster: carsharing }
+spec: { partitions: 6, replicas: 3, config: { retention.ms: 86400000, compression.type: lz4 } }
+---
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaTopic
+metadata:
+  name: trip.commands
+  namespace: data
+  labels: { strimzi.io/cluster: carsharing }
+spec: { partitions: 6, replicas: 3, config: { retention.ms: 86400000 } }
+---
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaTopic
+metadata:
+  name: fleet.location.stream
+  namespace: data
+  labels: { strimzi.io/cluster: carsharing }
+spec: { partitions: 6, replicas: 3, config: { retention.ms: 86400000 } }
+---
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaTopic
+metadata:
+  name: archive.events
+  namespace: data
+  labels: { strimzi.io/cluster: carsharing }
+spec: { partitions: 3, replicas: 3, config: { retention.ms: 604800000 } }

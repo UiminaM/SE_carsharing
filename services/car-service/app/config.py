@@ -1,4 +1,3 @@
-"""Car service configuration via environment variables."""
 
 from __future__ import annotations
 

@@ -1,0 +1,35 @@
+apiVersion: networking.istio.io/v1
+kind: Gateway
+metadata:
+  name: carsharing-gateway
+  namespace: ingress
+spec:
+  selector:
+    istio: ingressgateway
+  servers:
+    - port:
+        number: 80
+        name: http
+        protocol: HTTP
+      hosts: ["api.carsharing.local", "carsharing.local"]
+---
+apiVersion: networking.istio.io/v1
+kind: VirtualService
+metadata:
+  name: api-gateway-routes
+  namespace: ingress
+spec:
+  hosts: ["api.carsharing.local", "carsharing.local"]
+  gateways: [carsharing-gateway]
+  http:
+    - match:
+        - uri: { prefix: "/api/" }
+      route:
+        - destination:
+            host: api-gateway.carsharing.svc.cluster.local
+            port: { number: 8000 }
+      timeout: 5s
+      retries:
+        attempts: 2
+        perTryTimeout: 2s
+        retryOn: "5xx,connect-failure,refused-stream"

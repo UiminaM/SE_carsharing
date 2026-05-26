@@ -1,4 +1,3 @@
-"""Fleet/Tracking service configuration."""
 
 from __future__ import annotations
 

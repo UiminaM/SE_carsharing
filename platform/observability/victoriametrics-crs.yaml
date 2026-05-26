@@ -1,0 +1,56 @@
+apiVersion: operator.victoriametrics.com/v1beta1
+kind: VMCluster
+metadata:
+  name: vmcluster
+  namespace: observability
+spec:
+  retentionPeriod: "14d"
+  replicationFactor: 1
+  vmstorage:
+    replicaCount: 1
+    storage:
+      emptyDir: {}
+    resources:
+      requests:
+        cpu: 100m
+        memory: 256Mi
+      limits:
+        cpu: 700m
+        memory: 768Mi
+  vmselect:
+    replicaCount: 1
+    cacheMountPath: /cache
+    storage:
+      emptyDir: {}
+    resources:
+      requests:
+        cpu: 100m
+        memory: 192Mi
+      limits:
+        cpu: 700m
+        memory: 768Mi
+  vminsert:
+    replicaCount: 1
+    resources:
+      requests:
+        cpu: 100m
+        memory: 128Mi
+      limits:
+        cpu: 500m
+        memory: 512Mi
+---
+apiVersion: operator.victoriametrics.com/v1beta1
+kind: VLogs
+metadata:
+  name: vlogs
+  namespace: observability
+spec:
+  retentionPeriod: "7d"
+  replicaCount: 1
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 700m
+      memory: 768Mi

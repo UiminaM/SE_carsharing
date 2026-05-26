@@ -1,0 +1,13 @@
+{{- if .Values.podMonitor.enabled }}
+apiVersion: operator.victoriametrics.com/v1beta1
+kind: VMPodScrape
+metadata:
+  name: {{ include "ms.fullName" . }}
+  labels: {{- include "ms.labels" . | nindent 4 }}
+spec:
+  selector:
+    matchLabels: {{- include "ms.selectorLabels" . | nindent 6 }}
+  podMetricsEndpoints:
+    - port: {{ .Values.podMonitor.port }}
+      path: {{ .Values.podMonitor.path }}
+{{- end }}

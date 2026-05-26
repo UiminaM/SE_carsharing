@@ -1,4 +1,3 @@
-"""Async MongoDB client factory with connection pooling."""
 
 from __future__ import annotations
 

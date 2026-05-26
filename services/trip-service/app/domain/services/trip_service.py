@@ -1,4 +1,3 @@
-"""Trip domain service — booking, start, complete flows with Kafka commands."""
 
 from __future__ import annotations
 
@@ -234,18 +233,9 @@ class TripDomainService:
         return trip
 
     async def get_trip(self, trip_id: str) -> Trip | None:
-        """Hot-path lookup in PostgreSQL; never falls back to cold storage."""
         return await self._repo.get_by_id(trip_id)
 
     async def get_trip_with_cold_fallback(self, trip_id: str) -> dict[str, Any] | None:
-        """Return a trip from hot storage (PG) or cold storage (S3/Parquet).
-
-        Order:
-          1. If the trip is still in ``trips``: return ORM representation.
-          2. Otherwise, check ``archived_trips_index``; if present, read the
-             Parquet shard from S3 and locate the trip_id inside it.
-          3. Return ``None`` when neither source has the trip.
-        """
         trip = await self._repo.get_by_id(trip_id)
         if trip is not None:
             return _trip_to_dict(trip, from_cold=False)
@@ -283,11 +273,6 @@ class TripDomainService:
     async def retention_delete_archived(
         self, older_than: datetime, batch_size: int = 100
     ) -> int:
-        """Safely drop trips from PostgreSQL *only* if already archived.
-
-        Returns the number of rows deleted. Pre-requisite: an
-        ``archived_trips_index`` row exists and ``archived_at <= older_than``.
-        """
         if self._archive_repo is None:
             return 0
 
@@ -330,4 +315,3 @@ def _trip_to_dict(trip: Trip, *, from_cold: bool) -> dict[str, Any]:
         "total_cost": trip.total_cost,
         "_source": "cold" if from_cold else "hot",
     }
-

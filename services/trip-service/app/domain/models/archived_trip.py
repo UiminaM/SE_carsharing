@@ -1,9 +1,3 @@
-"""Index of trips that have been successfully archived to cold storage.
-
-Populated from Kafka (``archive.events`` / TRIP_ARCHIVED watermarks emitted
-by the Archive Service). Used as a safety gate before deleting rows from
-``trips`` (retention worker) and as a lookup when serving cold reads.
-"""
 
 from __future__ import annotations
 

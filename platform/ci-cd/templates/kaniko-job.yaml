@@ -1,0 +1,43 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: kaniko-build-api-gateway
+  namespace: ci
+spec:
+  template:
+    spec:
+      serviceAccountName: kaniko-builder
+      restartPolicy: Never
+      containers:
+        - name: kaniko
+          image: gcr.io/kaniko-project/executor:v1.23.2-debug
+          args:
+            - "--dockerfile=/workspace/api-gateway/Dockerfile"
+            - "--context=git://github.com/UiminaM/SE_carsharing.git#refs/heads/main"
+            - "--destination=registry.ci.svc.cluster.local:5000/api-gateway:latest"
+            - "--cache=true"
+            - "--cache-repo=registry.ci.svc.cluster.local:5000/api-gateway-cache"
+            - "--insecure"
+            - "--skip-tls-verify"
+          volumeMounts:
+            - { name: docker-config, mountPath: /kaniko/.docker }
+      volumes:
+        - name: docker-config
+          configMap:
+            name: kaniko-docker-config
+            items: [{ key: config.json, path: config.json }]
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: kaniko-docker-config
+  namespace: ci
+data:
+  config.json: |
+    { "auths": { "registry.ci.svc.cluster.local:5000": { "auth": "Y2Fyc2hhcmluZzpjYXJzaGFyaW5n" } } }
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: kaniko-builder
+  namespace: ci

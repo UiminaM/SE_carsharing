@@ -1,0 +1,18 @@
+---
+kafka_namespace: data
+kafka_cluster_name: carsharing
+kafka_version: "3.9.0"
+kafka_replicas: 3
+kafka_zookeeper_replicas: 3
+kafka_storage_class: standard
+kafka_storage_size: 5Gi
+kafka_listeners_plain_port: 9092
+kafka_listeners_tls_port: 9093
+kafka_metrics_enabled: true
+
+kafka_topics: []
+kafka_users: []
+
+strimzi_operator_version: "0.46.1"
+strimzi_install_method: helm
+strimzi_chart_repo_url: https://strimzi.io/charts/

@@ -1,0 +1,38 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: carsharing-services
+  namespace: argocd
+spec:
+  generators:
+    - list:
+        elements:
+          - name: api-gateway
+          - name: car-service
+          - name: user-service
+          - name: trip-service
+          - name: fleet-service
+          - name: archive-service
+  template:
+    metadata:
+      name: "{{name}}"
+      labels:
+        app.kubernetes.io/part-of: carsharing
+    spec:
+      project: default
+      source:
+        repoURL: https://github.com/UiminaM/SE_carsharing.git
+        targetRevision: main
+        path: "platform/helm-charts/{{name}}"
+        helm:
+          releaseName: "{{name}}"
+          valueFiles:
+            - values.yaml
+      destination:
+        server: https://kubernetes.default.svc
+        namespace: carsharing
+      syncPolicy:
+        automated: { prune: true, selfHeal: true }
+        syncOptions:
+          - ServerSideApply=true
+          - RespectIgnoreDifferences=true

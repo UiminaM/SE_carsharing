@@ -1,0 +1,64 @@
+---
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: car-service
+  namespace: carsharing
+spec:
+  hosts: [car-service.carsharing.svc.cluster.local]
+  http:
+    - timeout: 3s
+      retries:
+        attempts: 3
+        perTryTimeout: 1s
+        retryOn: "connect-failure,refused-stream,unavailable,5xx,gateway-error,reset"
+      route:
+        - destination: { host: car-service.carsharing.svc.cluster.local }
+---
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: user-service
+  namespace: carsharing
+spec:
+  hosts: [user-service.carsharing.svc.cluster.local]
+  http:
+    - timeout: 3s
+      retries:
+        attempts: 3
+        perTryTimeout: 1s
+        retryOn: "connect-failure,refused-stream,unavailable,5xx,gateway-error,reset"
+      route:
+        - destination: { host: user-service.carsharing.svc.cluster.local }
+---
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: trip-service
+  namespace: carsharing
+spec:
+  hosts: [trip-service.carsharing.svc.cluster.local]
+  http:
+    - timeout: 5s
+      retries:
+        attempts: 2
+        perTryTimeout: 2s
+        retryOn: "connect-failure,refused-stream,unavailable,5xx,gateway-error,reset"
+      route:
+        - destination: { host: trip-service.carsharing.svc.cluster.local }
+---
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: fleet-service
+  namespace: carsharing
+spec:
+  hosts: [fleet-service.carsharing.svc.cluster.local]
+  http:
+    - timeout: 3s
+      retries:
+        attempts: 3
+        perTryTimeout: 1s
+        retryOn: "connect-failure,refused-stream,unavailable,5xx,gateway-error,reset"
+      route:
+        - destination: { host: fleet-service.carsharing.svc.cluster.local }

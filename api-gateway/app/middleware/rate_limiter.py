@@ -1,4 +1,3 @@
-"""Redis-based sliding window rate limiter middleware."""
 
 from __future__ import annotations
 

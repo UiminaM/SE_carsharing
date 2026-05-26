@@ -1,9 +1,3 @@
-"""Thin async wrapper around boto3 S3 client for MinIO / AWS S3.
-
-Uses synchronous boto3 under the hood, executed in a thread pool via
-``asyncio.to_thread`` — simpler dependency graph than aioboto3 and fully
-adequate for low/medium throughput archival workloads.
-"""
 
 from __future__ import annotations
 
@@ -18,7 +12,6 @@ from botocore.exceptions import ClientError
 logger: structlog.stdlib.BoundLogger = structlog.get_logger()
 
 class S3Client:
-    """Async-friendly S3 client; thread-safe for use from a single event loop."""
 
     def __init__(
         self,
@@ -39,7 +32,6 @@ class S3Client:
         )
 
     async def ensure_bucket(self, bucket: str) -> None:
-        """Idempotently create the bucket if it does not exist."""
 
         def _ensure() -> None:
             try:
